@@ -17,6 +17,7 @@ import Text.Printf
 import Test.Hspec
 import Test.HUnit (assertBool)
 import qualified Language.Haskell.Exts as Q
+import Data.Approx (Approx(..))
 
 ripParseOk :: Q.ParseResult a -> IO a
 ripParseOk (Q.ParseOk x) = return x
@@ -87,7 +88,7 @@ hidden hiddens = do
   let failures = [(desc, hide) | desc <- imports, hide <- hiddens, exposed desc hide]
   let message = "Import declarations must hide " ++ show hiddens
   assertBool message $ null failures
-  
+
 -- | Check that solution hides a module or a symbol from a module.
 --
 -- > solutionShouldHide $ FromModule "Prelude" "head"
@@ -103,13 +104,10 @@ solutionShouldHideAll = hidden
 -- | Create approximately equal expectation with margin.
 --
 -- > shouldBeApprox' = shouldBeApproxPrec 1e-9
-shouldBeApproxPrec :: (Fractional a, Ord a, Show a) => a -> a -> a -> Expectation
-shouldBeApproxPrec margin actual expected =
-  if abs (actual - expected) < abs margin * max 1 (abs expected)
-    then return ()
-    else expectationFailure message
+shouldBeApproxPrec :: (Approx a, Show a) => a -> a -> a -> Expectation
+shouldBeApproxPrec margin = shouldBeWithShow (isApproxWithin margin) showFail
   where
-    message = concat [
+    showFail actual expected = concat [
       "Test Failed\nexpected: ", show expected,
       " within margin of ", show margin,
       "\n but got: ", show actual]
@@ -117,9 +115,24 @@ shouldBeApproxPrec margin actual expected =
 infix 1 `shouldBeApprox`
 
 -- | Predefined approximately equal expectation.
--- @actual \`shouldBeApprox\` expected@ sets the expectation that @actual@ is
--- approximately equal to @expected@ within the margin of @1e-6@.
 --
 -- > sqrt 2.0 `shouldBeApprox` (1.4142135 :: Double)
-shouldBeApprox :: (Fractional a, Ord a, Show a) => a -> a -> Expectation
-shouldBeApprox = shouldBeApproxPrec 1e-6
+shouldBeApprox :: (Approx a, Show a) => a -> a -> Expectation
+shouldBeApprox = shouldBeApproxPrec defaultMargin
+
+-- | Non-overloaded version of 'Test.Hspec.Expectations.shouldBe'.
+--
+-- > shouldBeWith ((==) `on` sort) "abc" "cba"
+shouldBeWith :: (Show a) => (a -> a -> Bool) -> a -> a -> Expectation
+shouldBeWith eql = shouldBeWithShow eql showFail
+  where
+    showFail actual expected =
+        "expected: " ++ show expected ++
+      "\n but got: " ++ show actual
+
+-- | @shouldBeWithShow eql showFail actual expected@ fails with a message
+--   determined by @showFail actual expected@ if @eql actual expected == False@
+shouldBeWithShow :: (Show a) => (a -> a -> Bool) -> (a -> a -> String) -> a -> a -> Expectation
+shouldBeWithShow eql showFail actual expected = assertBool
+                                                  (showFail actual expected)
+                                                  (eql actual expected)

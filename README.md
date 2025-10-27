@@ -43,7 +43,7 @@ solutionShouldHideAll [FromModule "Prelude" "head", Module "Data.Set"]
 #### `shouldBeApprox`
 
 ```haskell
-shouldBeApprox :: (Fractional a, Ord a, Show a) => a -> a -> Expectation
+shouldBeApprox :: (Approx a, Show a) => a -> a -> Expectation
 ```
 
 Predefined approximately equal expectation with error margin `1e-6`.
@@ -55,7 +55,7 @@ sqrt 2.0 `shouldBeApprox` (1.4142135 :: Double)
 #### `shouldBeApproxPrec`
 
 ```haskell
-shouldBeApproxPrec :: (Fractional a, Ord a, Show a) => a -> a -> a -> Expectation
+shouldBeApproxPrec :: (Approx a, Show a) => a -> a -> a -> Expectation
 ```
 
 Create approximately equal expectation with margin.
@@ -63,3 +63,33 @@ Create approximately equal expectation with margin.
 ```haskell
 shouldBeApprox' = shouldBeApproxPrec 1e-9
 ```
+
+### Utility Functions
+
+#### `shouldBeWith`
+
+```haskell
+shouldBeWith :: (Show a) => (a -> a -> Bool) -> a -> a -> Expectation
+```
+
+Non-overloaded version of `shouldBe`.
+
+```haskell
+shouldBeWith ((==) `on` sort) "abc" "cba"
+```
+
+# Data.Approx
+
+### Approximate Equality
+
+#### `Approx`
+
+Class for data that can be compared for equality within some margin.
+
+#### `Approx1`
+
+Lifting of the `Approx` class to unary type constructors.
+
+#### `Approx2`
+
+Lifting of the `Approx` class to binary type constructors.
