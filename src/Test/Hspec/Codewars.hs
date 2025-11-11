@@ -105,22 +105,27 @@ solutionShouldHideAll = hidden
 --
 -- > shouldBeApprox' = shouldBeApproxPrec 1e-9
 shouldBeApproxPrec :: (Approx a, Show a) => a -> a -> a -> Expectation
-shouldBeApproxPrec margin = shouldBeWithShow (isApproxWithin margin) showFail
+shouldBeApproxPrec margin = shouldBeWithShow (isApprox margin) showFail
   where
     showFail actual expected = concat [
-      "Test Failed\nexpected: ", show expected,
-      " within margin of ", show margin,
-      "\n but got: ", show actual]
+        "Test Failed"
+      , "\nexpected: ", show expected, " within margin of ", show margin
+      , "\n but got: ", show actual
+      ]
 
 infix 1 `shouldBeApprox`
 
--- | Predefined approximately equal expectation.
+-- | Predefined approximately equal expectation with error margin `1e-6`.
 --
 -- > sqrt 2.0 `shouldBeApprox` (1.4142135 :: Double)
-shouldBeApprox :: (Approx a, Show a) => a -> a -> Expectation
-shouldBeApprox = shouldBeApproxPrec defaultMargin
+shouldBeApprox :: (Fractional a, Approx a, Show a) => a -> a -> Expectation
+shouldBeApprox = shouldBeApproxPrec 1e-6
 
--- | Non-overloaded version of 'Test.Hspec.Expectations.shouldBe'.
+-- | Like 'Test.Hspec.Expectations.shouldBe', but with an explicitly given
+--   equality function.
+--
+--   The supplied equality function does not have to be symmetric, and shall be
+--   called with the expected value as the second argument.
 --
 -- > shouldBeWith ((==) `on` sort) "abc" "cba"
 shouldBeWith :: (Show a) => (a -> a -> Bool) -> a -> a -> Expectation
@@ -130,9 +135,10 @@ shouldBeWith eql = shouldBeWithShow eql showFail
         "expected: " ++ show expected ++
       "\n but got: " ++ show actual
 
--- | @shouldBeWithShow eql showFail actual expected@ fails with a message
---   determined by @showFail actual expected@ if @eql actual expected == False@
-shouldBeWithShow :: (Show a) => (a -> a -> Bool) -> (a -> a -> String) -> a -> a -> Expectation
-shouldBeWithShow eql showFail actual expected = assertBool
-                                                  (showFail actual expected)
-                                                  (eql actual expected)
+-- | Like 'shouldBeWith', but with an explicitly given show function for failed
+--   tests.
+shouldBeWithShow :: (a -> a -> Bool)
+                 -> (a -> a -> String)
+                 -> a -> a -> Expectation
+shouldBeWithShow eql showFail actual expected =
+  assertBool (showFail actual expected) (eql actual expected)
