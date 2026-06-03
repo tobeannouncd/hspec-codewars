@@ -5,6 +5,7 @@ module Data.Approx (Approx (..), (~=), (/~=), Approx1(..), Approx2(..)) where
 import Data.Ratio (Ratio)
 import Data.Functor.Identity (Identity (..))
 import Data.Complex (Complex(..), magnitude)
+import Data.Functor.Classes (Eq1(..))
 
 infix 4 ~=, /~=
 
@@ -32,7 +33,7 @@ a /~= b = not (a ~= b)
 isApproxFloating :: (RealFloat a) => a -> a -> a -> Bool
 isApproxFloating eps a b
   | isInfinite a || isInfinite b = a == b
-  | otherwise = abs (a - b) <= eps * max (abs a) (abs b)
+  | otherwise = abs (a - b) <= eps * max 1 (max (abs a) (abs b))
 
 instance Approx Float where
   isApprox = isApproxFloating
@@ -47,7 +48,7 @@ instance (Approx a) => Approx (Identity a) where
   isApprox = liftApprox isApprox . runIdentity
 
 instance (Approx a, RealFloat a) => Approx (Complex a) where
-  isApprox = liftApprox isApprox . magnitude
+  isApprox eps a b = liftApprox isApprox (magnitude eps) a b
 
 -- | Lifting of the 'Approx' class to unary type constructors.
 class Approx1 t where
@@ -55,25 +56,20 @@ class Approx1 t where
   --   @approx@ into the lifted type with a margin of error of @eps@.
   liftApprox :: (a -> a -> a -> Bool) -> a -> t a -> t a -> Bool
 
+liftApproxEq1 :: Eq1 t => (eps -> a -> a -> Bool) -> eps -> t a -> t a -> Bool
+liftApproxEq1 approx = liftEq . approx
+
 instance Approx1 [] where
-  liftApprox approx eps = go
-   where
-    go []     []     = True
-    go (x:xs) (y:ys) = approx eps x y && go xs ys
-    go _      _      = False
+  liftApprox = liftApproxEq1
 
 instance Approx1 Maybe where
-  liftApprox approx eps ma mb =
-    case (ma, mb) of
-      (Nothing, Nothing) -> True
-      (Just a,   Just b) -> approx eps a b
-      _                  -> False
+  liftApprox = liftApproxEq1
 
 instance Approx1 Identity where
-  liftApprox approx eps (Identity a) (Identity b) = approx eps a b
+  liftApprox = liftApproxEq1
 
 instance Approx1 Complex where
-  liftApprox approx eps (a :+ x) (b :+ y) = approx eps a b && approx eps x y
+  liftApprox = liftApproxEq1
 
 -- | Lifting of the 'Approx' class to binary type constructors.
 class Approx2 t where
