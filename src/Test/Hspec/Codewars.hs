@@ -8,8 +8,8 @@ module Test.Hspec.Codewars (
   Hidden(..),
   solutionShouldHide,
   solutionShouldHideAll,
-  shouldBeApproxPrec, shouldBeApproxPrec1, shouldBeApproxPrec2,
-  shouldBeApprox, shouldBeApprox1, shouldBeApprox2,
+  shouldBeApproxPrec, shouldBeApproxPrec1, shouldBeApproxPrec2, shouldBeApproxPrec2',
+  shouldBeApprox, shouldBeApprox1, shouldBeApprox2, shouldBeApprox2',
   isApprox,
   Approx(..), Approx1(..), Approx2(..),
 ) where
