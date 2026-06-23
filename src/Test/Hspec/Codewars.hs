@@ -120,13 +120,12 @@ infix 1 `shouldBeApprox`
 shouldBeApprox :: (Fractional a, Ord a, Show a) => a -> a -> Expectation
 shouldBeApprox = shouldBeApproxPrec 1e-6
 
--- | Wrapper for values to be compared for approximate equality. The margin of
--- error is bundled with the expected value as @'Expected' margin value@. The
+-- | Wrapper for values to be compared for approximate equality. The
 -- 'Show' instance is altered so that failure messages also show the margin of
 -- error.
 data Approx a
   = Actual a
-  | Expected a a
+  | Expected a a -- ^ @Expected margin value@
 
 -- | @isApprox margin actual expected@ determines if @actual@ is approximately
 -- equal to @expected@ within the given @margin@.
@@ -196,3 +195,10 @@ shouldBeApproxPrec2 margin1 margin2 actual expected =
 
 shouldBeApprox2 :: (Fractional a, Ord a, Fractional b, Ord b, Show a, Show b, Show (t a b), Eq2 t) => t a b -> t a b -> Expectation
 shouldBeApprox2 = shouldBeApproxPrec2 1e-6 1e-6
+
+shouldBeApproxPrec2' :: (Show a, Show (t a a), Num a, Ord a, Eq2 t) => a -> t a a -> t a a -> Expectation
+shouldBeApproxPrec2' margin actual expected =
+  Actual2 actual `shouldBe` Expected2 margin margin expected
+
+shouldBeApprox2' :: (Fractional a, Show a, Show (t a a), Ord a, Eq2 t) => t a a -> t a a -> Expectation
+shouldBeApprox2' = shouldBeApproxPrec2' 1e-6
