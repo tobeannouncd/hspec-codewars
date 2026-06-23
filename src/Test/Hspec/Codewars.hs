@@ -147,8 +147,8 @@ instance Show a => Show (Approx a) where
   showsPrec p (Expected m e) =
     showParen (p > 10) $ shows e . showString " within margin of " . shows m
 
--- | Wrapper for values to be compared for approximate equality, lifted via the
--- 'Eq1' instance of the unary type constructor.
+-- | Wrapper for values to be compared for approximate equality within a given
+-- margin of error, lifted via the 'Eq1' instance of the unary type constructor.
 data Approx1 t a
   = Actual1 (t a)
   | Expected1 a (t a)
@@ -170,6 +170,9 @@ shouldBeApproxPrec1 :: (Num a, Ord a, Show a, Show (t a), Eq1 t) => a -> t a -> 
 shouldBeApproxPrec1 margin actual expected =
   Actual1 actual `shouldBe` Expected1 margin expected
 
+-- | Wrapper for values to be compared for approximate equality within two given
+-- margins of error, lifted via the 'Eq2' instance of the binary type
+-- constructor.
 data Approx2 t a b
   = Actual2 (t a b)
   | Expected2 a b (t a b)
