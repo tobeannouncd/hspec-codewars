@@ -106,7 +106,7 @@ solutionShouldHideAll = hidden
 -- | Create approximately equal expectation with margin.
 --
 -- > shouldBeApprox' = shouldBeApproxPrec 1e-9
-shouldBeApproxPrec :: (Fractional a, Ord a, Show a) => a -> a -> a -> Expectation
+shouldBeApproxPrec :: (Num a, Ord a, Show a) => a -> a -> a -> Expectation
 shouldBeApproxPrec margin actual expected =
   Actual actual `shouldBe` Expected margin expected
 

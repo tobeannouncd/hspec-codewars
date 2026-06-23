@@ -55,7 +55,7 @@ sqrt 2.0 `shouldBeApprox` (1.4142135 :: Double)
 #### `shouldBeApproxPrec`
 
 ```haskell
-shouldBeApproxPrec :: (Fractional a, Ord a, Show a) => a -> a -> a -> Expectation
+shouldBeApproxPrec :: (Num a, Ord a, Show a) => a -> a -> a -> Expectation
 ```
 
 Create approximately equal expectation with margin.
